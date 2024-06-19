@@ -1,6 +1,6 @@
 import streamlit as st
 import logging
-from sqlalchemy import create_engine, Column, Integer, String, Text, asc
+from sqlalchemy import create_engine, Column, Integer, Text, asc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -32,7 +32,7 @@ def get_all_texts():
     session = Session()
     texts = session.query(TextItem).order_by(asc(TextItem.content)).all()
     session.close()
-    return [text.content for text in texts]
+    return [(text.id, text.content) for text in texts]
 
 
 def add_text_to_db(content):
@@ -63,6 +63,9 @@ def delete_text_from_db(text_id):
 if "edit_index" not in st.session_state:
     st.session_state.edit_index = -1
 
+if "edit_id" not in st.session_state:
+    st.session_state.edit_id = None
+
 
 def add_text():
     user_input = st.session_state.user_input
@@ -72,52 +75,51 @@ def add_text():
         logger.info(f"Added new concept: {user_input}")
 
 
-def update_text(index):
-    original_text = get_all_texts()[index]
+def update_text():
     updated_text = st.session_state.edit_input
-    update_text_in_db(index + 1, updated_text)  # Assuming text ID is index + 1
+    text_id = st.session_state.edit_id
+    update_text_in_db(text_id, updated_text)
     st.session_state.edit_index = -1
     st.session_state.edit_input = ""  # Clear the edit input field
-    logger.info(f"Updated concept from '{original_text}' to '{updated_text}'")
+    st.session_state.edit_id = None
+    logger.info(f"Updated concept to '{updated_text}'")
 
 
-def edit_text(index):
+def edit_text(index, text_id):
     st.session_state.edit_index = index
-    st.session_state.edit_input = get_all_texts()[index]
+    st.session_state.edit_id = text_id
+    st.session_state.edit_input = get_all_texts()[index][1]
     logger.info(f"Editing concept: {st.session_state.edit_input}")
 
 
 def export_list():
     # Create a string with each text on a new line
-    text_list = "\n".join(get_all_texts())
+    text_list = "\n".join([text[1] for text in get_all_texts()])
     logger.info("Exported list of concepts")
     return text_list
 
 
 def main():
     st.title("A Glossary for Research on Human Crowd Dynamics – 2nd Edition.")
-    st.markdown(
-        "[Glossary for Research on Human Crowd Dynamics](https://collective-dynamics.eu/index.php/cod/article/view/A19)"
-    )
+
     # Input text field
     st.text_input("Enter new concept:", key="user_input", on_change=add_text)
 
     # Display the list of texts with edit buttons
     st.write("### List of concepts:")
     texts = get_all_texts()
-    c1, c2 = st.columns(2)
-    for i, text in enumerate(texts):
+    for i, (text_id, text) in enumerate(texts):
         if st.session_state.edit_index == i:
             st.text_input(
                 "Edit text:", value=st.session_state.edit_input, key="edit_input"
             )
-            st.button("Save", on_click=update_text, args=(i,))
+            st.button("Save", on_click=update_text)
             st.button(
                 "Cancel", on_click=lambda: setattr(st.session_state, "edit_index", -1)
             )
         else:
-            c1.write(f"- {text}")
-            c2.button("Edit", key=f"edit_{i}", on_click=edit_text, args=(i,))
+            st.write(f"- {text}")
+            st.button("Edit", key=f"edit_{i}", on_click=edit_text, args=(i, text_id))
 
     # Add a button to export the list as a .txt file
     exported_text = export_list()

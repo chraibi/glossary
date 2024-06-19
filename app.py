@@ -1,16 +1,65 @@
 import streamlit as st
 import logging
+from sqlalchemy import create_engine, Column, Integer, String, Text, asc
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to write to a file
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("app.log"), logging.StreamHandler()],
+)
 logger = logging.getLogger(__name__)
-save = st.sidebar.empty()
-msg = st.sidebar.empty()
 
-# Initialize session state to store the list of inputs and the index of the item being edited
-if "texts" not in st.session_state:
-    st.session_state.texts = []
+# Configure database
+DATABASE_URL = "sqlite:///texts.db"
+Base = declarative_base()
 
+
+class TextItem(Base):
+    __tablename__ = "texts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    content = Column(Text, nullable=False)
+
+
+engine = create_engine(DATABASE_URL)
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+
+
+def get_all_texts():
+    session = Session()
+    texts = session.query(TextItem).order_by(asc(TextItem.content)).all()
+    session.close()
+    return [text.content for text in texts]
+
+
+def add_text_to_db(content):
+    session = Session()
+    new_text = TextItem(content=content)
+    session.add(new_text)
+    session.commit()
+    session.close()
+
+
+def update_text_in_db(text_id, new_content):
+    session = Session()
+    text_item = session.query(TextItem).get(text_id)
+    text_item.content = new_content
+    session.commit()
+    session.close()
+
+
+def delete_text_from_db(text_id):
+    session = Session()
+    text_item = session.query(TextItem).get(text_id)
+    session.delete(text_item)
+    session.commit()
+    session.close()
+
+
+# Initialize session state to store the index of the item being edited
 if "edit_index" not in st.session_state:
     st.session_state.edit_index = -1
 
@@ -18,16 +67,15 @@ if "edit_index" not in st.session_state:
 def add_text():
     user_input = st.session_state.user_input
     if user_input:
-        st.session_state.texts.append(user_input)
+        add_text_to_db(user_input)
         st.session_state.user_input = ""  # Clear the input field
         logger.info(f"Added new concept: {user_input}")
-        st.info(f"Added new concept: {user_input}")
 
 
 def update_text(index):
-    original_text = st.session_state.texts[index]
+    original_text = get_all_texts()[index]
     updated_text = st.session_state.edit_input
-    st.session_state.texts[index] = updated_text
+    update_text_in_db(index + 1, updated_text)  # Assuming text ID is index + 1
     st.session_state.edit_index = -1
     st.session_state.edit_input = ""  # Clear the edit input field
     logger.info(f"Updated concept from '{original_text}' to '{updated_text}'")
@@ -35,27 +83,30 @@ def update_text(index):
 
 def edit_text(index):
     st.session_state.edit_index = index
-    st.session_state.edit_input = st.session_state.texts[index]
+    st.session_state.edit_input = get_all_texts()[index]
     logger.info(f"Editing concept: {st.session_state.edit_input}")
 
 
 def export_list():
     # Create a string with each text on a new line
-    text_list = "\n".join(st.session_state.texts)
+    text_list = "\n".join(get_all_texts())
     logger.info("Exported list of concepts")
     return text_list
 
 
 def main():
     st.title("A Glossary for Research on Human Crowd Dynamics – 2nd Edition.")
-
+    st.markdown(
+        "[Glossary for Research on Human Crowd Dynamics](https://collective-dynamics.eu/index.php/cod/article/view/A19)"
+    )
     # Input text field
     st.text_input("Enter new concept:", key="user_input", on_change=add_text)
 
     # Display the list of texts with edit buttons
     st.write("### List of concepts:")
+    texts = get_all_texts()
     c1, c2 = st.columns(2)
-    for i, text in enumerate(st.session_state.texts):
+    for i, text in enumerate(texts):
         if st.session_state.edit_index == i:
             st.text_input(
                 "Edit text:", value=st.session_state.edit_input, key="edit_input"
@@ -70,7 +121,7 @@ def main():
 
     # Add a button to export the list as a .txt file
     exported_text = export_list()
-    save.download_button(
+    st.sidebar.download_button(
         label=":floppy_disk: Export list",
         data=exported_text,
         file_name="list_concepts.txt",

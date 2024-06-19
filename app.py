@@ -78,11 +78,12 @@ def add_text():
 def update_text():
     updated_text = st.session_state.edit_input
     text_id = st.session_state.edit_id
-    update_text_in_db(text_id, updated_text)
-    st.session_state.edit_index = -1
-    st.session_state.edit_input = ""  # Clear the edit input field
-    st.session_state.edit_id = None
-    logger.info(f"Updated concept to '{updated_text}'")
+    if updated_text:
+        update_text_in_db(text_id, updated_text)
+        st.session_state.edit_index = -1
+        st.session_state.edit_input = ""  # Clear the edit input field
+        st.session_state.edit_id = None
+        logger.info(f"Updated concept to '{updated_text}'")
 
 
 def edit_text(index, text_id):

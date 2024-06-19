@@ -28,6 +28,10 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
 
+def num_items():
+    return len(get_all_texts())
+
+
 def get_all_texts():
     session = Session()
     texts = session.query(TextItem).order_by(asc(TextItem.content)).all()
@@ -105,11 +109,14 @@ def main():
     st.markdown(
         "[A Glossary for Research on Human Crowd Dynamics](https://collective-dynamics.eu/index.php/cod/article/view/A19)"
     )
-    # Input text field
-    st.text_input("Enter new concept:", key="user_input", on_change=add_text)
+    st.write("-------------------")
 
+    # Input text field
+    st.text_input(
+        ":arrow_forward: Enter new concept:", key="user_input", on_change=add_text
+    )
     # Display the list of texts with edit buttons
-    st.write("### List of concepts:")
+    st.write("### :round_pushpin:  List of concepts:")
     texts = get_all_texts()
     c1, c2 = st.columns(2)
     for i, (text_id, text) in enumerate(texts):
@@ -133,6 +140,8 @@ def main():
         file_name="list_concepts.txt",
         mime="text/plain",
     )
+    st.sidebar.write("-----------------------")
+    st.sidebar.metric(":bar_chart: **Number of items**", value=num_items())
 
 
 if __name__ == "__main__":

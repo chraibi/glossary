@@ -101,13 +101,16 @@ def export_list():
 
 def main():
     st.title("A Glossary for Research on Human Crowd Dynamics – 2nd Edition.")
-
+    st.markdown(
+        "[A Glossary for Research on Human Crowd Dynamics](https://collective-dynamics.eu/index.php/cod/article/view/A19)"
+    )
     # Input text field
     st.text_input("Enter new concept:", key="user_input", on_change=add_text)
 
     # Display the list of texts with edit buttons
     st.write("### List of concepts:")
     texts = get_all_texts()
+    c1, c2 = st.columns(2)
     for i, (text_id, text) in enumerate(texts):
         if st.session_state.edit_index == i:
             st.text_input(
@@ -118,8 +121,8 @@ def main():
                 "Cancel", on_click=lambda: setattr(st.session_state, "edit_index", -1)
             )
         else:
-            st.write(f"- {text}")
-            st.button("Edit", key=f"edit_{i}", on_click=edit_text, args=(i, text_id))
+            c1.write(f"- {text}")
+            c2.button("Edit", key=f"edit_{i}", on_click=edit_text, args=(i, text_id))
 
     # Add a button to export the list as a .txt file
     exported_text = export_list()

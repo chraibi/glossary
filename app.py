@@ -2,7 +2,7 @@ import os
 import streamlit as st
 import logging
 from sqlalchemy import create_engine, Column, Integer, Text, asc
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 

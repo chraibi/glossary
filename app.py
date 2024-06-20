@@ -103,6 +103,7 @@ if "message" not in st.session_state:
 
 def add_text():
     user_input = st.session_state.user_input
+    user_input = user_input.strip()
     if user_input:
         texts = get_all_texts()
         if user_input not in [text[1] for text in texts]:
@@ -110,7 +111,7 @@ def add_text():
             st.session_state.user_input = ""  # Clear the input field
             st.session_state.message = f"Added new concept: {user_input}"
         else:
-            st.session_state.message = "Warning: this concept is already in the list!"
+            st.session_state.message = "⚠️ This concept is already in the list!"
 
 
 def update_text():
@@ -147,7 +148,7 @@ def main():
     # st.write("-------------------")
     # Introductory text
     st.markdown("""
-    ### Welcome to the Human Crowd Dynamics Glossary – 2nd Edition.
+    ### The Human Crowd Dynamics Glossary – 2nd Edition.
     This app allows you to manage a glossary of concepts related to the research on human crowd dynamics. You can click [this link](https://collective-dynamics.eu/index.php/cod/article/view/A19) to see if your suggestion was already included in the first glossary.
 
     - **Add new concepts** by entering them in the text input field and hitting enter.  
@@ -158,13 +159,16 @@ def main():
     st.divider()
     # Input text field
     st.text_input(
-        ":arrow_forward: Enter new concept:", key="user_input", on_change=add_text
+        ":arrow_forward: Enter new concept:",
+        key="user_input",
+        on_change=add_text,
+        placeholder="new concept",
     )
     if st.session_state.message:
-        if st.session_state.message.startswith("Warning"):
+        if st.session_state.message.startswith("⚠️"):
             st.warning(st.session_state.message)
         else:
-            st.info(st.session_state.message)
+            st.toast(st.session_state.message, icon="🤝")
 
     # Display the list of texts with edit buttons
     st.write("### :round_pushpin:  List of concepts:")

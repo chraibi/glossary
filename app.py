@@ -1,8 +1,11 @@
+import os
 import streamlit as st
 import logging
 from sqlalchemy import create_engine, Column, Integer, Text, asc
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+
 
 # Configure logging to write to a file
 logging.basicConfig(
@@ -26,6 +29,29 @@ class TextItem(Base):
 engine = create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
+
+
+def get_timestamped_filename():
+    # Generate a filename with the current date and time
+    now = datetime.now()
+    return now.strftime("%Y_%m_%d_%H_%M_%S.txt")
+
+
+def is_running_locally() -> bool:
+    """Check if the Streamlit app is running locally."""
+    streamlit_server = "/mount/src/glossary"
+    current_working_directory = os.getcwd()
+    return current_working_directory != streamlit_server
+
+
+def reset_app():
+    if os.path.exists("texts.db"):
+        os.remove("texts.db")
+    # Clear the session state
+    st.session_state.clear()
+    # Recreate the database
+    Base.metadata.create_all(engine)
+    st.success("App reset successfully!")
 
 
 def num_items():
@@ -164,13 +190,19 @@ def main():
         #     )
 
     # Add a button to export the list as a .txt file
+    timestamped_filename = get_timestamped_filename()
     exported_text = export_list()
     st.sidebar.download_button(
         label=":floppy_disk: Export list",
         data=exported_text,
-        file_name="list_concepts.txt",
+        file_name=timestamped_filename,
         mime="text/plain",
     )
+    if is_running_locally():
+        st.sidebar.info("App running locally!")
+        if st.sidebar.button("Reset App"):
+            reset_app()
+
     st.sidebar.write("-----------------------")
     st.sidebar.metric(":bar_chart: **Number of items**", value=num_items())
 

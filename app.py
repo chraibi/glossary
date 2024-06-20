@@ -97,12 +97,20 @@ if "edit_id" not in st.session_state:
     st.session_state.edit_id = None
 
 
+if "message" not in st.session_state:
+    st.session_state.message = ""
+
+
 def add_text():
     user_input = st.session_state.user_input
     if user_input:
-        add_text_to_db(user_input)
-        st.session_state.user_input = ""  # Clear the input field
-        logger.info(f"Added new concept: {user_input}")
+        texts = get_all_texts()
+        if user_input not in [text[1] for text in texts]:
+            add_text_to_db(user_input)
+            st.session_state.user_input = ""  # Clear the input field
+            st.session_state.message = f"Added new concept: {user_input}"
+        else:
+            st.session_state.message = "Warning: this concept is already in the list!"
 
 
 def update_text():
@@ -131,17 +139,32 @@ def export_list():
 
 
 def main():
-    st.title("A Glossary for Research on Human Crowd Dynamics – 2nd Edition.")
-    st.link_button(
-        "A Glossary for Research on Human Crowd Dynamics",
-        "https://collective-dynamics.eu/index.php/cod/article/view/A19)",
-    )
-    st.write("-------------------")
-
+    #    st.title("A Glossary for Research on Human Crowd Dynamics – 2nd Edition.")
+    # st.link_button(
+    #    "A Glossary for Research on Human Crowd Dynamics",
+    #    "https://collective-dynamics.eu/index.php/cod/article/view/A19)",
+    # )
+    # st.write("-------------------")
+    # Introductory text
+    st.markdown("""
+    ### Welcome to the Human Crowd Dynamics Glossary – 2nd Edition.
+    This app allows you to manage a glossary of concepts related to the research on human crowd dynamics.
+    You can click [this link](https://collective-dynamics.eu/index.php/cod/article/view/A19) to see if your suggestion was included in the first glossary.
+    
+    - **Add new concepts** by entering them in the text input field and hitting enter.
+    - **Edit existing concepts** by clicking the :orange[**edit**] button next to the concept. Please use the following format: Revise - XXX.
+    """)
+    st.divider()
     # Input text field
     st.text_input(
         ":arrow_forward: Enter new concept:", key="user_input", on_change=add_text
     )
+    if st.session_state.message:
+        if st.session_state.message.startswith("Warning"):
+            st.warning(st.session_state.message)
+        else:
+            st.info(st.session_state.message)
+
     # Display the list of texts with edit buttons
     st.write("### :round_pushpin:  List of concepts:")
     texts = get_all_texts()
@@ -164,30 +187,12 @@ def main():
                 )
             else:
                 st.button(
-                    f"Edit", key=f"edit_{i}", on_click=edit_text, args=(i, text_id)
+                    "Edit",
+                    key=f"edit_{i}",
+                    on_click=edit_text,
+                    args=(i, text_id),
+                    type="primary",
                 )
-
-        # if st.session_state.edit_index == i:
-        #     st.text_input(
-        #         "Edit text:", value=st.session_state.edit_input, key="edit_input"
-        #     )
-        #     st.button("Save", on_click=update_text)
-        #     st.button(
-        #         "Cancel", on_click=lambda: setattr(st.session_state, "edit_index", -1)
-        #     )
-        # else:
-        #     c1.write(
-        #         f"{i+1} - {text}",
-        #         # disabled=True,
-        #         # type="secondary",
-        #     )
-        #     c2.button(
-        #         f"Edit {i+1}",
-        #         key=f"edit_{i}",
-        #         on_click=edit_text,
-        #         args=(i, text_id),
-        #         type="primary",
-        #     )
 
     # Add a button to export the list as a .txt file
     timestamped_filename = get_timestamped_filename()

@@ -106,7 +106,7 @@ def add_text():
     user_input = user_input.strip()
     if user_input:
         texts = get_all_texts()
-        if user_input not in [text[1] for text in texts]:
+        if user_input.lower() not in [text[1].lower() for text in texts]:
             add_text_to_db(user_input)
             logger.info(f"Added new concept: {user_input}")
             st.session_state.user_input = ""  # Clear the input field

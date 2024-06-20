@@ -106,8 +106,9 @@ def export_list():
 
 def main():
     st.title("A Glossary for Research on Human Crowd Dynamics – 2nd Edition.")
-    st.markdown(
-        "[A Glossary for Research on Human Crowd Dynamics](https://collective-dynamics.eu/index.php/cod/article/view/A19)"
+    st.link_button(
+        "A Glossary for Research on Human Crowd Dynamics",
+        "https://collective-dynamics.eu/index.php/cod/article/view/A19)",
     )
     st.write("-------------------")
 
@@ -120,17 +121,47 @@ def main():
     texts = get_all_texts()
     c1, c2 = st.columns(2)
     for i, (text_id, text) in enumerate(texts):
-        if st.session_state.edit_index == i:
-            st.text_input(
-                "Edit text:", value=st.session_state.edit_input, key="edit_input"
-            )
-            st.button("Save", on_click=update_text)
-            st.button(
-                "Cancel", on_click=lambda: setattr(st.session_state, "edit_index", -1)
-            )
-        else:
-            c1.write(f"- {text}")
-            c2.button("Edit", key=f"edit_{i}", on_click=edit_text, args=(i, text_id))
+        col1, col2 = st.columns([0.8, 0.2])
+        with col1:
+            if st.session_state.edit_index == i:
+                st.text_input(
+                    "Edit text:", value=st.session_state.edit_input, key="edit_input"
+                )
+            else:
+                st.write(f"- **{text}**")
+        with col2:
+            if st.session_state.edit_index == i:
+                st.button("Save", on_click=update_text)
+                st.button(
+                    "Cancel",
+                    on_click=lambda: setattr(st.session_state, "edit_index", -1),
+                )
+            else:
+                st.button(
+                    f"Edit", key=f"edit_{i}", on_click=edit_text, args=(i, text_id)
+                )
+
+        # if st.session_state.edit_index == i:
+        #     st.text_input(
+        #         "Edit text:", value=st.session_state.edit_input, key="edit_input"
+        #     )
+        #     st.button("Save", on_click=update_text)
+        #     st.button(
+        #         "Cancel", on_click=lambda: setattr(st.session_state, "edit_index", -1)
+        #     )
+        # else:
+        #     c1.write(
+        #         f"{i+1} - {text}",
+        #         # disabled=True,
+        #         # type="secondary",
+        #     )
+        #     c2.button(
+        #         f"Edit {i+1}",
+        #         key=f"edit_{i}",
+        #         on_click=edit_text,
+        #         args=(i, text_id),
+        #         type="primary",
+        #     )
 
     # Add a button to export the list as a .txt file
     exported_text = export_list()

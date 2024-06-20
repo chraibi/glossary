@@ -108,9 +108,11 @@ def add_text():
         texts = get_all_texts()
         if user_input not in [text[1] for text in texts]:
             add_text_to_db(user_input)
+            logger.info(f"Added new concept: {user_input}")
             st.session_state.user_input = ""  # Clear the input field
             st.session_state.message = f"Added new concept: {user_input}"
         else:
+            logger.warning(f"⚠️ This concept is already in the list! {user_input}")
             st.session_state.message = "⚠️ This concept is already in the list!"
 
 

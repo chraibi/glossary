@@ -31,6 +31,23 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
 
+def init_page_config() -> None:
+    """Set up information that show on the webpage."""
+    st.set_page_config(
+        page_title="Glossary for Research on Human Crowd Dynamics",
+        page_icon="📙",
+        layout="wide",
+        initial_sidebar_state="expanded",
+        menu_items={},
+    )
+
+
+def init_app_looks() -> None:
+    """Add badges to sidebar."""
+    logo_path = "logo.png"
+    st.sidebar.image(str(logo_path), use_column_width=True)
+
+
 def get_timestamped_filename():
     # Generate a filename with the current date and time
     now = datetime.now()
@@ -220,4 +237,6 @@ def main():
 
 
 if __name__ == "__main__":
+    init_page_config()
+    init_app_looks()
     main()

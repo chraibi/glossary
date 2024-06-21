@@ -168,7 +168,7 @@ def main():
     # Introductory text
     st.markdown("""
     ### The Human Crowd Dynamics Glossary – 2nd Edition.
-    This app allows you to manage a glossary of concepts related to the research on human crowd dynamics. You can click [this link](https://collective-dynamics.eu/index.php/cod/article/view/A19) to see if your suggestion was already included in the first glossary.
+    This app allows you to manage a glossary of concepts related to the research on human crowd dynamics. You can click :point_right: [this link](https://collective-dynamics.eu/index.php/cod/article/view/A19) to see if your suggestion was already included in the first glossary.
 
     - **Add new concepts** by entering them in the text input field and hitting enter.  
     - **Edit existing concepts** by clicking the :orange[**edit**] button next to the concept.
